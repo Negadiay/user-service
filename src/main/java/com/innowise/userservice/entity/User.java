@@ -43,4 +43,14 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PaymentCard> cards = new ArrayList<>();
+
+    public void addCard(PaymentCard card) {
+        cards.add(card);
+        card.setUser(this);
+    }
+
+    public void removeCard(PaymentCard card) {
+        cards.remove(card);
+        card.setUser(null);
+    }
 }
