@@ -1,5 +1,6 @@
 package com.innowise.userservice.service;
 
+import com.innowise.userservice.config.CacheNames;
 import com.innowise.userservice.dto.PaymentCardRequestDto;
 import com.innowise.userservice.dto.PaymentCardResponseDto;
 import com.innowise.userservice.entity.PaymentCard;
@@ -14,6 +15,8 @@ import com.innowise.userservice.repository.UserRepository;
 import com.innowise.userservice.specification.PaymentCardSpecifications;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,6 +30,7 @@ public class PaymentCardService {
     private final PaymentCardRepository cardRepository;
     private final UserRepository userRepository;
     private final PaymentCardMapper cardMapper;
+    private final CacheManager cacheManager;
 
     @Transactional
     public PaymentCardResponseDto create(Long userId, PaymentCardRequestDto dto) {
@@ -40,7 +44,9 @@ public class PaymentCardService {
         }
         PaymentCard card = cardMapper.toEntity(dto);
         user.addCard(card);
-        return cardMapper.toDto(cardRepository.save(card));
+        PaymentCardResponseDto result = cardMapper.toDto(cardRepository.save(card));
+        evictUserCache(userId);
+        return result;
     }
 
     public PaymentCardResponseDto getById(Long id) {
@@ -66,7 +72,9 @@ public class PaymentCardService {
             throw new CardNumberAlreadyExistsException();
         }
         cardMapper.updateEntity(dto, card);
-        return cardMapper.toDto(cardRepository.saveAndFlush(card));
+        PaymentCardResponseDto result = cardMapper.toDto(cardRepository.saveAndFlush(card));
+        evictUserCache(result.userId());
+        return result;
     }
 
     @Transactional
@@ -81,12 +89,23 @@ public class PaymentCardService {
 
     @Transactional
     public void delete(Long id) {
-        cardRepository.delete(findCard(id));
+        PaymentCard card = findCard(id);
+        Long userId = card.getUser().getId();
+        cardRepository.delete(card);
+        evictUserCache(userId);
     }
 
     private void changeActiveStatus(Long id, boolean active) {
-        if (cardRepository.updateActiveStatus(id, active) == 0) {
-            throw new PaymentCardNotFoundException(id);
+        Long userId = cardRepository.findUserIdByCardId(id)
+                .orElseThrow(() -> new PaymentCardNotFoundException(id));
+        cardRepository.updateActiveStatus(id, active);
+        evictUserCache(userId);
+    }
+
+    private void evictUserCache(Long userId) {
+        Cache cache = cacheManager.getCache(CacheNames.USERS);
+        if (cache != null) {
+            cache.evict(userId);
         }
     }
 
