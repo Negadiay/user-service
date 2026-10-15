@@ -1,5 +1,6 @@
 package com.innowise.userservice.entity;
 
+import com.innowise.userservice.exception.CardLimitExceededException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,6 +22,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "users")
 public class User extends BaseEntity {
+    public static final int MAX_CARDS = 5;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,4 +45,17 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PaymentCard> cards = new ArrayList<>();
+
+    public void addCard(PaymentCard card) {
+        if (cards.size() >= MAX_CARDS) {
+            throw new CardLimitExceededException(id, MAX_CARDS);
+        }
+        cards.add(card);
+        card.setUser(this);
+    }
+
+    public void removeCard(PaymentCard card) {
+        cards.remove(card);
+        card.setUser(null);
+    }
 }
