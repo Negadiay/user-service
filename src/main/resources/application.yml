@@ -1,8 +1,9 @@
 spring:
   application:
     name: user-service
+  profiles:
+    default: local
   datasource:
-    url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
   data:
@@ -11,8 +12,9 @@ spring:
         max-page-size: 50
         serialization-mode: via-dto
     redis:
-      host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      repositories:
+        enabled: false
   cache:
     type: redis
     redis:
