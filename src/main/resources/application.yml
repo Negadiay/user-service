@@ -5,6 +5,14 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+  data:
+    web:
+      pageable:
+        max-page-size: 50
+        serialization-mode: via-dto
+  web:
+    locale: ru
+    locale-resolver: fixed
   jpa:
     hibernate:
       ddl-auto: validate
