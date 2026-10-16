@@ -30,7 +30,7 @@ jobs:
         run: ./mvnw -B -DskipTests package
 
       - name: Test
-        run: ./mvnw -B verify
+        run: ./mvnw -B jacoco:prepare-agent surefire:test jacoco:report
 
       - name: Code analysis (SonarCloud)
         if: env.SONAR_TOKEN != ''
