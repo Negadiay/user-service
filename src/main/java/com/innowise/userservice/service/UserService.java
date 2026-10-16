@@ -1,5 +1,6 @@
 package com.innowise.userservice.service;
 
+import com.innowise.userservice.config.CacheNames;
 import com.innowise.userservice.dto.UserRequestDto;
 import com.innowise.userservice.dto.UserResponseDto;
 import com.innowise.userservice.entity.User;
@@ -9,6 +10,9 @@ import com.innowise.userservice.mapper.UserMapper;
 import com.innowise.userservice.repository.UserRepository;
 import com.innowise.userservice.specification.UserSpecifications;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,6 +35,7 @@ public class UserService {
         return userMapper.toDto(userRepository.save(user));
     }
 
+    @Cacheable(cacheNames = CacheNames.USERS, key = "#id")
     public UserResponseDto getById(Long id) {
         return userMapper.toDto(findUserWithCards(id));
     }
@@ -40,6 +45,7 @@ public class UserService {
                 .map(userMapper::toDto);
     }
 
+    @CachePut(cacheNames = CacheNames.USERS, key = "#id")
     @Transactional
     public UserResponseDto update(Long id, UserRequestDto dto) {
         User user = findUserWithCards(id);
@@ -50,16 +56,19 @@ public class UserService {
         return userMapper.toDto(userRepository.saveAndFlush(user));
     }
 
+    @CacheEvict(cacheNames = CacheNames.USERS, key = "#id")
     @Transactional
     public void activate(Long id) {
         changeActiveStatus(id, true);
     }
 
+    @CacheEvict(cacheNames = CacheNames.USERS, key = "#id")
     @Transactional
     public void deactivate(Long id) {
         changeActiveStatus(id, false);
     }
 
+    @CacheEvict(cacheNames = CacheNames.USERS, key = "#id")
     @Transactional
     public void delete(Long id) {
         User user = userRepository.findById(id)

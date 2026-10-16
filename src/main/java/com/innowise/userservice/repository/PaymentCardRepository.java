@@ -2,6 +2,8 @@ package com.innowise.userservice.repository;
 
 import com.innowise.userservice.entity.PaymentCard;
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -15,6 +17,9 @@ public interface PaymentCardRepository extends JpaRepository<PaymentCard, Long>,
 
     @Query(value = "SELECT COUNT(*) FROM payment_cards WHERE user_id = :userId", nativeQuery = true)
     long countCardsByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT c.user.id FROM PaymentCard c WHERE c.id = :id")
+    Optional<Long> findUserIdByCardId(@Param("id") Long id);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE PaymentCard c SET c.active = :active, c.updatedAt = LOCAL DATETIME WHERE c.id = :id")
