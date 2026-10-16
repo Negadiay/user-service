@@ -1,6 +1,7 @@
 package com.innowise.userservice.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 
@@ -10,7 +11,7 @@ public record ErrorResponseDto(
         String error,
         String message,
         String path,
-        Map<String, String> validationErrors
+        Map<String, List<String>> validationErrors
 ) {
 
     public static ErrorResponseDto of(HttpStatus status, String message, String path) {
@@ -18,7 +19,7 @@ public record ErrorResponseDto(
     }
 
     public static ErrorResponseDto of(HttpStatus status, String message, String path,
-                                      Map<String, String> validationErrors) {
+                                      Map<String, List<String>> validationErrors) {
         return new ErrorResponseDto(LocalDateTime.now(), status.value(), status.getReasonPhrase(),
                 message, path, validationErrors);
     }
